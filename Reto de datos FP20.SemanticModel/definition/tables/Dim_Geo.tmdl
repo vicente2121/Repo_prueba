@@ -1,0 +1,57 @@
+table Dim_Geo
+	lineageTag: 532c77d5-8e79-4637-88ad-54ce1df61734
+
+	column Region
+		dataType: string
+		lineageTag: f9a27174-0209-415b-a96f-da65ee37f924
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: 6e3000a5-b248-45ad-8811-e64bbafc2554
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: dfe3be61-c8bf-4b19-a046-78ded3d7a111
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column Id_Geo
+		dataType: int64
+		formatString: 0
+		lineageTag: f76af49e-11ee-4206-9d44-3da59258bdb2
+		summarizeBy: none
+		sourceColumn: Id_Geo
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Geo-aa70159d-4c66-45ac-8c59-bf8e671f15ac = m
+		mode: import
+		queryGroup: Datos
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("C:\Users\vicen\Downloads\DATOS.xlsx"), null, true),
+				    SportProducts_Table = Source{[Item="SportProducts",Kind="Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(SportProducts_Table,{{"Retailer", type text}, {"Retailer ID", Int64.Type}, {"Invoice Date", type date}, {"Region", type text}, {"State", type text}, {"City", type text}, {"Product", type text}, {"Price per Unit", type number}, {"Units Sold", Int64.Type}, {"Total Sales", type number}, {"Operating Profit", type number}, {"Operating Margin", type number}, {"Sales Method", type text}}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"Region", "State", "City"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns", {"City", "State"}),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "Id_Geo"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

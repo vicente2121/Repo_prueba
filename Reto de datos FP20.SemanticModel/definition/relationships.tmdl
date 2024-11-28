@@ -1,0 +1,20 @@
+relationship c96d0fd9-69e8-4c74-aa88-b38e59c4f971
+	fromColumn: Tabla_hechos.Id_Geo
+	toColumn: Dim_Geo.Id_Geo
+
+relationship 9f20719d-b9b9-4535-8830-ab43d7ea8cb8
+	fromColumn: Tabla_hechos.'Retailer ID'
+	toColumn: Dim_Retailer.'Retailer ID'
+
+relationship 90231e3c-6749-4e3d-968d-7f1b6f65f004
+	fromColumn: Tabla_hechos.'Invoice Date'
+	toColumn: Dim_Calendario.Fecha
+
+relationship a262af6e-2cee-43b9-aa92-031dd7e29111
+	fromColumn: Tabla_hechos.Id_Producto
+	toColumn: Dim_Producto.Index
+
+relationship 012766e9-5c58-4117-a88b-e19a2eb72d1c
+	fromColumn: Tabla_hechos.Id_metodoventas
+	toColumn: Dim_MetodoVentas.Index
+

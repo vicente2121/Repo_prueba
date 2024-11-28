@@ -1,0 +1,38 @@
+table Dim_Retailer
+	lineageTag: a8d7ba0f-3ea5-4858-ba2e-435b6d896526
+
+	column Minorista
+		dataType: string
+		lineageTag: 0bf94ee3-0191-42a0-a16e-d62fcb271aff
+		summarizeBy: none
+		sourceColumn: Minorista
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retailer ID'
+		dataType: int64
+		formatString: 0
+		lineageTag: 92f23d24-9a75-4841-b0d5-cce28847ac41
+		summarizeBy: none
+		sourceColumn: Retailer ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Retailer-95732388-96ea-4925-af75-5cbc97df1c5f = m
+		mode: import
+		queryGroup: Datos
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("C:\Users\vicen\Downloads\DATOS.xlsx"), null, true),
+				    SportProducts_Table = Source{[Item="SportProducts",Kind="Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(SportProducts_Table,{{"Retailer", type text}, {"Retailer ID", Int64.Type}, {"Invoice Date", type date}, {"Region", type text}, {"State", type text}, {"City", type text}, {"Product", type text}, {"Price per Unit", type number}, {"Units Sold", Int64.Type}, {"Total Sales", type number}, {"Operating Profit", type number}, {"Operating Margin", type number}, {"Sales Method", type text}}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"Retailer", "Retailer ID"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Duplicates",{{"Retailer", "Minorista"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,152 @@
+table Tabla_hechos
+	excludeFromModelRefresh
+	lineageTag: 38a2560a-e551-4e32-aebf-5c4cd634c6af
+
+	column 'Retailer ID'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6154cb59-cd85-4ecb-ba66-c36f5284c908
+		summarizeBy: none
+		sourceColumn: Retailer ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Invoice Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ee1803b2-ba3d-402a-a431-4a98b6f096ef
+		summarizeBy: none
+		sourceColumn: Invoice Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Price per Unit'
+		dataType: double
+		lineageTag: 57ad3068-9081-4187-b844-3e8b2994bb29
+		summarizeBy: sum
+		sourceColumn: Price per Unit
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Units Sold'
+		dataType: int64
+		formatString: 0
+		lineageTag: 023c4d23-1148-4b1d-822b-e7e2db104cd0
+		summarizeBy: sum
+		sourceColumn: Units Sold
+
+		annotation SummarizationSetBy = Automatic
+
+	column Id_Geo
+		dataType: int64
+		formatString: 0
+		lineageTag: f2473591-6cc3-4735-96af-63c32dfc6666
+		summarizeBy: none
+		sourceColumn: Id_Geo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ventas totales' = ```
+			Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit] 
+			```
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 309a2d4e-2a45-4b78-86fa-3799cba5be84
+		summarizeBy: sum
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Margen operativo' = DIVIDE(Tabla_hechos[Beneficio operativo],Tabla_hechos[Ventas totales])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 078c73b8-f75a-46fc-9b25-34f30774919b
+		summarizeBy: sum
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Costos Operativos' = ```
+			Tabla_hechos[Ventas totales]-Tabla_hechos[Beneficio operativo] 
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: e719579e-c350-4434-8f25-129d948b19f8
+		summarizeBy: sum
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Beneficio operativo'
+		dataType: int64
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: d5e47c47-36f2-4335-ae04-d517151ac046
+		summarizeBy: sum
+		sourceColumn: Beneficio operativo
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	column Id_metodoventas
+		dataType: int64
+		formatString: 0
+		lineageTag: 1df4f9e4-dd5a-4967-9ecd-e882ba3311d4
+		summarizeBy: none
+		sourceColumn: Id_metodoventas
+
+		annotation SummarizationSetBy = Automatic
+
+	column Id_Producto
+		dataType: int64
+		formatString: 0
+		lineageTag: f676c047-9310-4319-ab14-ee673940b538
+		summarizeBy: none
+		sourceColumn: Id_Producto
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Comprobacion del margen operativo' = DIVIDE(Tabla_hechos[Beneficio operativo],Tabla_hechos[Costos Operativos])*1
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 81c05712-be81-4f1c-893b-97e76bc24de8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Tabla_hechos-97fc10fe-7d09-495d-8a82-400ee65293c0 = m
+		mode: import
+		queryGroup: Datos
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("C:\Users\vicen\Downloads\DATOS.xlsx"), null, true),
+				    SportProducts_Table = Source{[Item="SportProducts",Kind="Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(SportProducts_Table,{{"Retailer", type text}, {"Retailer ID", Int64.Type}, {"Invoice Date", type date}, {"Region", type text}, {"State", type text}, {"City", type text}, {"Product", type text}, {"Price per Unit", type number}, {"Units Sold", Int64.Type}, {"Total Sales", type number}, {"Operating Profit", type number}, {"Operating Margin", type number}, {"Sales Method", type text}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type", {"City"}, Dim_Geo, {"City"}, "Dim_Geo", JoinKind.LeftOuter),
+				    #"Expanded Dim_Geo" = Table.ExpandTableColumn(#"Merged Queries", "Dim_Geo", {"Id_Geo"}, {"Dim_Geo.Id_Geo"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Expanded Dim_Geo",{{"Dim_Geo.Id_Geo", "Id_Geo"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns",{"Region", "State", "City"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Removed Columns", {"Sales Method"}, Dim_MetodoVentas, {"Sales Method"}, "Dim_MetodoVentas", JoinKind.LeftOuter),
+				    #"Expanded Dim_MetodoVentas" = Table.ExpandTableColumn(#"Merged Queries1", "Dim_MetodoVentas", {"Index"}, {"Dim_MetodoVentas.Index"}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Expanded Dim_MetodoVentas",{{"Dim_MetodoVentas.Index", "Id_metodoventas"}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns2",{"Sales Method"}),
+				    #"Merged Queries2" = Table.NestedJoin(#"Removed Columns1", {"Product"}, Dim_Producto, {"Product"}, "Dim_Producto", JoinKind.LeftOuter),
+				    #"Expanded Dim_Producto" = Table.ExpandTableColumn(#"Merged Queries2", "Dim_Producto", {"Index"}, {"Dim_Producto.Index"}),
+				    #"Renamed Columns3" = Table.RenameColumns(#"Expanded Dim_Producto",{{"Dim_Producto.Index", "Id_Producto"}}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Renamed Columns3",{"Product", "Retailer"}),
+				    #"Added Custom" = Table.AddColumn(#"Removed Columns2", "Ventas totales 2", each [Price per Unit]*[Units Sold]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"Ventas totales 2", Int64.Type}}),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Changed Type1",{"Operating Margin", "Ventas totales 2", "Total Sales"}),
+				    #"Added Custom1" = Table.AddColumn(#"Removed Columns3", "Beneficio operativo", each [Operating Profit]/10),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Added Custom1",{{"Beneficio operativo", Int64.Type}}),
+				    #"Removed Columns4" = Table.RemoveColumns(#"Changed Type2",{"Operating Profit"})
+				in
+				    #"Removed Columns4"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

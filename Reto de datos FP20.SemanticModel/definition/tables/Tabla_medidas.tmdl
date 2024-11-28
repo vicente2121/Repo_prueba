@@ -1,0 +1,419 @@
+table Tabla_medidas
+	lineageTag: 2ffdb8e2-56cb-47c2-a99b-b20f1af88539
+
+	measure 'Cantidad registros' = ```
+			COUNTROWS(Tabla_hechos) 
+			```
+		formatString: #,0
+		lineageTag: 5c7d9e4f-8656-4327-ab37-bcb484f1f0f7
+
+	measure 'Ventas totales 3' = SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])
+		lineageTag: dc35e0b0-e786-4afb-9aea-8c60df5af1db
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total ventas' = ```
+			SUM(Tabla_hechos[Ventas totales]) 
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: c1f35f71-6b28-4537-929e-605053f387b6
+
+		changedProperty = FormatString
+
+	measure 'Total beneficios operativos' = ```
+			SUM(Tabla_hechos[Beneficio operativo]) 
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 6d7f97f4-4bbf-4b11-bfee-0a72f4be728a
+
+		changedProperty = FormatString
+
+	measure 'Total Costos operativos' = ```
+			SUM(Tabla_hechos[Costos Operativos]) 
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: f1593d7d-50ab-4aa1-918e-13b977c0ca98
+
+		changedProperty = FormatString
+
+	measure 'Color Diferencias mayor' =
+			
+			var _Promedio=
+			AVERAGEX(ALLSELECTED(Dim_Geo[Region]),[Total ventas])
+			
+			Var _Resta =
+			[Total ventas]-_Promedio
+			return
+			if(_Resta>0,1,0)
+		formatString: 0
+		displayFolder: Medidas especificas  Grafico Uno
+		lineageTag: 5e9b3851-19e6-4f5e-970e-e5d2a8b19634
+
+	measure Maximo_ventas =
+			
+			var _maximo_ventas_region=maxx(ALL(Dim_Geo[Region]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Result= IF(_maximo_ventas_region=SUM(Tabla_hechos[Ventas totales]),1,0)
+			
+			return
+			_Result
+		lineageTag: 255776b2-fb23-48dc-83d9-6e8cbd8da13a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Maximo Ventas region' = ```
+			
+			var _Maximo_ventas_region=maxx(ALL(Dim_Geo[Region]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Argupacion=SUMMARIZE(Dim_Geo,Dim_Geo[Region],"Validado",IF(_maximo_ventas_region=[Total ventas],1,0))
+			
+			var _Tabla=FILTER(_Argupacion,[Validado]=1)
+			 
+			var _Numero=CALCULATE([Total ventas],Dim_Geo[Region]=if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Geo[Region],","),"0"))
+			
+			var _Result="La region 🗺️ con ➕ ventas " &if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Geo[Region],","),"0") &" Con total de 
+			"&FORMAT( _Numero,
+			"💲#,##0")
+			return
+			_Result
+			
+			
+			```
+		displayFolder: Medidas especificas  Grafico Uno
+		lineageTag: 081801bb-48eb-4df8-ace0-bf238dc37d26
+
+	measure 'Margen de beneficio' = ```
+			DIVIDE([Total beneficios operativos], [Total ventas])
+			
+			```
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 69b739fe-9515-4363-9e75-313d9bc7cb23
+
+	measure '% Region participacion' =
+			
+			
+			Var _Denominador=CALCULATE([Total ventas],ALLSELECTED(Dim_Calendario[Mes]),ALL(Dim_Geo))
+			
+			Var _Resultado=DIVIDE([Total ventas],_Denominador)
+			
+			 return
+			 _Resultado
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		displayFolder: Medidas especificas  Grafico Uno
+		lineageTag: 35239ca7-f80c-4077-b491-a2e3792b1392
+
+	measure 'Medida unificada region' = ```
+			
+			 FORMAT([Total ventas],"$#,##0,.0") &
+			 " | "&
+			  FORMAT( [% Region participacion],"0%")
+			```
+		displayFolder: Medidas especificas  Grafico Uno
+		lineageTag: 88d8aeac-45aa-4dac-8cdb-b215aceb2845
+
+	measure Measure = CALCULATE([Total ventas],ALLSELECTED(Dim_Calendario[Mes]),ALL(Dim_Geo))
+		lineageTag: cad9948e-1c4b-4267-a15f-06517760dd2c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Maximo Ventas estado' = ```
+			
+			var _Maximo_ventas_region=maxx(ALL(Dim_Geo[State]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Argupacion=SUMMARIZE(Dim_Geo,Dim_Geo[State],"Validado",IF(_maximo_ventas_region=[Total ventas],1,0))
+			
+			var _Tabla=FILTER(_Argupacion,[Validado]=1)
+			 
+			var _Numero=CALCULATE([Total ventas],Dim_Geo[State]=if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Geo[State],","),"0"))
+			
+			var _Result="El estado 🗺️ con ➕ ventas " &if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Geo[State],","),"0") &" Con total de 
+			"&FORMAT( _Numero,
+			"💲#,##0")
+			return
+			_Result
+			
+			```
+		displayFolder: Medidas grafico 2
+		lineageTag: dad50479-deb1-4bb6-864d-61d698ab9f55
+
+	measure 'Maximo producto vendido por estado' =
+			
+			
+			Var _maximoventa = CALCULATE(maxx(Dim_Producto,[Total ventas]),ALLSELECTED(Dim_Geo[State]),ALL(Dim_Producto))
+			
+			Var _result=IF([Total ventas]=_maximoventa,1,0)
+			
+			return
+			_result
+		formatString: 0
+		lineageTag: 1938f637-cbec-4578-813e-e8f85bb440c2
+
+	measure 'Minimo productos vendidos' = ```
+			
+			 var _minimovendido=CALCULATE(MINX(Dim_Producto,[Total ventas]),ALLSELECTED(Dim_Geo[State]),ALL(Dim_Producto))
+			
+			 var _result=IF([Total ventas]=_minimovendido,1,0)
+			return
+			_result   
+			```
+		formatString: 0
+		lineageTag: c29ce699-530d-42fd-929f-c9e09fc0edb2
+
+	measure 'Subtitulo mas vendido' = ```
+			
+			"Con un total de ventas de: " & "🟢" & FORMAT([Total ventas],"$##,#0") & " y 
+			la cantidad de productos vendidos:" & FORMAT([Cantidad registros],"##,#")& "🟢" 
+			```
+		lineageTag: b9f6934f-c1bc-463c-a68c-07ce5bc1dc05
+
+	measure 'Subtitulo menos vendido' = ```
+			
+			"Con un total de ventas de: " & "🔴"&FORMAT([Total ventas],"$##,#0") & " y 
+			la cantidad de productos vendidos: " & FORMAT([Cantidad registros],"##,#")& "🔴"
+			```
+		lineageTag: 076afa65-5647-4417-a5e2-d8e2537f923b
+
+	measure 'Maximo leyenda mapa' =
+			
+			maxx(ALL(Dim_Geo[State]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 77dda2ff-df70-4c95-bd0e-85269b5c86bd
+
+	measure 'Minimo leyenda mapa' =
+			
+			MINX(ALL(Dim_Geo[State]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 578e0730-7c02-4cfa-82d3-ad22626729d2
+
+	measure 'Minimo Ventas estado' = ```
+			
+			var _Minimo_ventas_region=MINX(ALL(Dim_Geo[State]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Argupacion=SUMMARIZE(Dim_Geo,Dim_Geo[State],"Validado",IF(_Minimo_ventas_region=[Total ventas],1,0))
+			
+			var _Tabla=FILTER(_Argupacion,[Validado]=1)
+			 
+			var _Numero=CALCULATE([Total ventas],Dim_Geo[State]=if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Geo[State],","),"0"))
+			
+			var _Result="El estado 🗺️ con ➖  ventas " &if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Geo[State],","),"0") &" Con total de 
+			"&FORMAT( _Numero,
+			"💲#,##0")
+			return
+			_Result
+			```
+		lineageTag: 722cb816-ba3c-43b8-b058-6f49aefb15ed
+
+	measure 'Resaltar barras producto' = IF(SELECTEDVALUE(Dim_Producto[Product]) IN VALUES('Nombre de productos'[Product]),"#12239E","#DEEFFF")
+		lineageTag: 0d925df2-e61c-4052-995d-c6f180adbd2c
+
+	measure 'Maximo Ventas producto' = ```
+			
+			var _Maximo_ventas_producto=maxx(ALL(Dim_Producto[Product]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Argupacion=SUMMARIZE(Dim_Producto,Dim_Producto[Product],"Validado",IF(_Maximo_ventas_producto=[Total ventas],1,0))
+			
+			var _Tabla=FILTER(_Argupacion,[Validado]=1)
+			 
+			var _Numero=CALCULATE([Total ventas],Dim_Producto[Product]=if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Producto[Product],","),"0"))
+			
+			var _Result="El producto 📢  con ➕ ventas " &if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Producto[Product],","),"0") &" Con total de 
+			"&FORMAT( _Numero,
+			"💲#,##0")
+			return
+			_Result
+			
+			```
+		lineageTag: b6ccc567-9712-454d-8558-318a12284e29
+
+	measure 'Subtitulo por canal de venta' =
+			"Total ventas💵 por canal📣  de venta"&
+			"ㅤ" & REPT(UNICHAR(10),5)&FORMAT([Total ventas],"$#,##0")
+		lineageTag: 97d68c49-b55c-4981-987d-2573f35869b4
+
+	measure 'Leyenda ventas-cantidad por canal venta' = ```
+			
+			//Online
+			"Con un total de ventas de: " & "💲" & FORMAT(CALCULATE([Total ventas],Dim_MetodoVentas[Sales Method]="Online"),"$##,#0") & " y 
+			la cantidad de productos vendidos:" & FORMAT(CALCULATE([Cantidad registros],Dim_MetodoVentas[Sales Method]="Online"),"##,#")& "💱" 
+			```
+		lineageTag: bd041dd8-8214-44d8-8777-4a60f897e228
+
+	measure 'Leyenda ventas-cantidad por canal venta_1' = ```
+			
+			//Outlet
+			"Con un total de ventas de: " & "💲" & FORMAT(CALCULATE([Total ventas],Dim_MetodoVentas[Sales Method]="Outlet"),"$##,#0") & " y 
+			la cantidad de productos vendidos:" & FORMAT(CALCULATE([Cantidad registros],Dim_MetodoVentas[Sales Method]="Outlet"),"##,#")& "💱" 
+			```
+		lineageTag: d26e1e78-f3b1-49f2-8a70-4a44f2f14c22
+
+	measure 'Leyenda ventas-cantidad por canal venta_3' = ```
+			
+			//In-store
+			"Con un total de ventas de: " & "💲" & FORMAT(CALCULATE([Total ventas],Dim_MetodoVentas[Sales Method]="In-store"),"$##,#0") & " y 
+			la cantidad de productos vendidos:" & FORMAT(CALCULATE([Cantidad registros],Dim_MetodoVentas[Sales Method]="In-store"),"##,#")& "💱" 
+			```
+		lineageTag: aec23992-b071-4680-81b4-f0beac377cb7
+
+	measure 'Maximo Ventas minorista' = ```
+			
+			var _Maximo_ventas_minorista=maxx(ALL(Dim_Retailer[Minorista]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Argupacion=SUMMARIZE(Dim_Retailer,Dim_Retailer[Minorista],"Validado",IF(_Maximo_ventas_minorista=[Total ventas],1,0))
+			
+			var _Tabla=FILTER(_Argupacion,[Validado]=1)
+			 
+			var _Numero=CALCULATE([Total ventas],Dim_Retailer[Minorista]=if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Retailer[Minorista],","),"0"))
+			
+			var _Result="El minorista 📢  con ➕ ventas " &if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Retailer[Minorista],","),"0") &" Con total de 
+			"&FORMAT( _Numero,
+			"💲#,##0")
+			return
+			_Result
+			```
+		lineageTag: 399180f1-9d65-475a-b54d-5c66b34c311a
+
+	measure Rentabilidad = DIVIDE([Total beneficios operativos],[Total Costos operativos])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 0b1818c0-9a7d-4e6d-bd20-1ba2b9413891
+
+	measure 'Margen.Opt' = DIVIDE([Total beneficios operativos],[Total ventas])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: c4f22ef3-6507-4a07-a0bb-0ce903682d04
+
+	measure 'Medida dinamica' =
+			SWITCH(TRUE(),
+			            SELECTEDVALUE('Medida 2'[Nombre Medida])="Rentabilidad",[Rentabilidad],
+			            SELECTEDVALUE('Medida 2'[Nombre Medida])="Margen Operativo",[Margen.Opt])
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 291275af-c3c5-4bc7-aa28-d3fc9600b22a
+
+	measure 'Titulo dinamico' = ```
+			
+			SWITCH(TRUE(), 
+			SELECTEDVALUE(Medida[Parameter Order]) = 1, "Margen Operativo", 
+			                SELECTEDVALUE(Medida[Parameter Order])=2,"Rentabilidad",
+			                SELECTEDVALUE(Medida[Parameter Order])=0,"Rentabilidad y Marge Operativo")
+			```
+		lineageTag: 64954a2d-3074-41e8-93fb-298b0a2a38d8
+
+	measure 'Subtitulo dinamico' = ```
+			
+			SWITCH(TRUE(), 
+			SELECTEDVALUE(Medida[Parameter Order]) = 1, "📊Margen Operativo por producto", 
+			                SELECTEDVALUE(Medida[Parameter Order])=2,"📉Rentabilidad por producto",
+			                SELECTEDVALUE(Medida[Parameter Order])=0,"📉Rentabilidad y 📊Marge Operativo por producto")
+			```
+		lineageTag: 5ef7ca1d-3411-4d58-be76-b460d6ff4252
+
+	measure 'Ventas mes anterior' = ```
+			
+			CALCULATE([Total ventas],DATEADD(Dim_Calendario[Fecha],-1,MONTH)) 
+			```
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: d8926e88-bd26-49c8-9970-02fa49a08c78
+
+	measure 'Ventas Menor' = IF([Total ventas]<[Ventas mes anterior],[Ventas mes anterior])
+		lineageTag: 299d6eae-e91d-437a-8390-7369eb4eb698
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Ventas mayor' = IF([Total ventas]>=[Ventas mes anterior],[Ventas mes anterior])
+		lineageTag: b4a566f9-9e7b-4ea6-992b-7d40187da007
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total ventas fake' = [Total ventas]
+		lineageTag: d8a7d8fa-65de-4c0f-b925-dfab1bd58775
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total ventas Mes maximo' = ```
+			
+			
+			var _Maximo_ventas_mes=maxx(ALL(Dim_Calendario[Mes]),CALCULATE(SUMX(Tabla_hechos,Tabla_hechos[Units Sold]*Tabla_hechos[Price per Unit])))
+			
+			var _Argupacion=SUMMARIZE(Dim_Calendario,Dim_Calendario[Mes],"Validado",IF(_Maximo_ventas_mes=[Total ventas],1,0))
+			
+			var _Tabla=FILTER(_Argupacion,[Validado]=1)
+			 
+			var _Numero=CALCULATE([Total ventas],Dim_Calendario[Mes]=if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Calendario[Mes],","),"0"))
+			
+			var _Result="El mes 🗓️  📢  con ➕ ventas " &if(COUNTROWS(_Tabla)>=1,CONCATENATEX(_Tabla,Dim_Calendario[Mes],","),"0") &" Con total de 
+			"&FORMAT( _Numero,
+			"💲#,##0")
+			return
+			_Result
+			```
+		lineageTag: 0f2e0498-331b-4ab2-8162-18c81068413d
+
+	measure 'Maximo Ventas mes opcion1' = ```
+			
+			 var _mes=ALLSELECTED(Dim_Calendario[Mes],Dim_Calendario[Mes_N])
+			
+			 var _result=MAXX(_mes,[Total ventas])
+			 return
+			 _result
+			```
+		lineageTag: 4aeb2bf9-e036-40b9-b21d-ae88bc6dd75e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Maximo Ventas mes opcion2' = ```
+			
+			 var _result=CALCULATE(
+			    MAXX(
+			        VALUES(Dim_Calendario[Mes]),
+			        [Total ventas]
+			    ),
+			    ALLSELECTED(Dim_Calendario)
+			) * 1.2
+			 return
+			 _result
+			```
+		lineageTag: 6922cb8b-d847-44a7-8016-0c764aed2135
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Measure 2'
+		lineageTag: 1a09d342-48f3-4bd4-ac71-ca04572b9cc1
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure 'Variación %' = ```
+			[Total ventas]
+			 
+			```
+		lineageTag: b565bc7a-88ea-4c68-883f-bc1609e3e86a
+
+		formatStringDefinition =
+				Var _dato=[Variacion % real]
+				
+				var _result=FORMAT(_dato,"0%")
+				
+				return
+				
+				"""" & _result & """"
+
+	measure 'Variacion % real' = ```
+			DIVIDE([Total ventas]-[Ventas mes anterior],[Ventas mes anterior]) 
+			```
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 09ce895e-9a94-429f-a2de-ad923926603b
+
+	measure 'Color en labels' =
+			
+			if ([Variacion % real]>0,"#484EC4","#FC6D6D")
+		lineageTag: 68672313-6ac4-40d5-b53b-8118e1b8c33e
+
+	partition Tabla_medidas-83ea05c6-a531-458f-863f-eeeb66fecdef = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+

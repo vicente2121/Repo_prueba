@@ -1,0 +1,48 @@
+table Medida
+	lineageTag: 30ceea38-8893-4920-a61b-13805760ac8f
+
+	column Parameter
+		lineageTag: f0f5c29a-48ed-4db5-a303-31a98d0f8eff
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: a69218b4-f5cd-44fc-84b1-c5874385d093
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 2bde4189-9805-4673-8deb-b2e32b2b3889
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Medida-31c43a4c-ac89-4ef6-b46e-65ce632d069f = calculated
+		mode: import
+		source =
+				{
+				    ("Rentabilidad", NAMEOF('Tabla_medidas'[Rentabilidad]), 2),
+				    ("Margen.Opt", NAMEOF('Tabla_medidas'[Margen.Opt]), 1)
+				}
+
+	annotation PBI_Id = af9e40bf249f419590f6e8d3e182445e
+

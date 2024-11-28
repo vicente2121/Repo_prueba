@@ -1,0 +1,83 @@
+table Dim_Calendario
+	lineageTag: 3fd982fb-f061-471c-8404-eee586efcbcb
+
+	column Fecha
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5c09060f-a7f7-4c24-bf3a-4273c6b862bd
+		summarizeBy: none
+		sourceColumn: Fecha
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Año
+		dataType: int64
+		formatString: 0
+		lineageTag: be28f219-c09c-4b4a-bbb8-8cd75ef7344a
+		summarizeBy: none
+		sourceColumn: Año
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mes_N
+		dataType: int64
+		formatString: 0
+		lineageTag: fecc2bbc-6ab2-4296-9770-811af97bfa38
+		summarizeBy: none
+		sourceColumn: Mes_N
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mes
+		dataType: string
+		lineageTag: 4d468952-d8c0-46b3-a46d-0f00a6492541
+		summarizeBy: none
+		sourceColumn: Mes
+		sortByColumn: Mes_N
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Semana
+		dataType: int64
+		formatString: 0
+		lineageTag: d5afd46e-e8fd-4d23-8320-e91c16091bae
+		summarizeBy: none
+		sourceColumn: Semana
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trimestre
+		dataType: int64
+		formatString: 0
+		lineageTag: e5b19689-7718-4a34-b3eb-d54e36d8f5a1
+		summarizeBy: none
+		sourceColumn: Trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Calendario-8cc87ca0-cc71-44ca-a313-a9e3a0ed5585 = m
+		mode: import
+		queryGroup: Datos
+		source =
+				let
+				    Source = {Number.From(List.Min(SportProducts[Invoice Date]))..Number.From(List.Max(SportProducts[Invoice Date]))},
+				    #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Converted to Table",{{"Column1", type date}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Fecha"}}),
+				    #"Inserted Year" = Table.AddColumn(#"Renamed Columns", "Year", each Date.Year([Fecha]), Int64.Type),
+				    #"Inserted Month" = Table.AddColumn(#"Inserted Year", "Month", each Date.Month([Fecha]), Int64.Type),
+				    #"Inserted Month Name" = Table.AddColumn(#"Inserted Month", "Month Name", each Date.MonthName([Fecha]), type text),
+				    #"Inserted Week of Year" = Table.AddColumn(#"Inserted Month Name", "Week of Year", each Date.WeekOfYear([Fecha]), Int64.Type),
+				    #"Inserted Quarter" = Table.AddColumn(#"Inserted Week of Year", "Quarter", each Date.QuarterOfYear([Fecha]), Int64.Type),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Inserted Quarter",{{"Year", "Año"}, {"Month", "Mes_N"}, {"Month Name", "Mes"}, {"Week of Year", "Semana"}, {"Quarter", "Trimestre"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

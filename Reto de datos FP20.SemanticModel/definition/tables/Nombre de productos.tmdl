@@ -1,0 +1,17 @@
+table 'Nombre de productos'
+	lineageTag: fe72fd20-b0ab-45d4-9c80-f6fa4c44b239
+
+	column Product
+		lineageTag: 73634ea6-3941-4363-a8a9-036563d339fe
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Dim_Producto[Product]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Nombre de productos-6a804236-bb7f-45de-bbc7-36499350bc58' = calculated
+		mode: import
+		source = VALUES(Dim_Producto[Product])
+
+	annotation PBI_Id = 49cd7ab390034e35b99cb149dfbd58f0
+

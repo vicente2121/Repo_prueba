@@ -1,0 +1,31 @@
+table 'Medida 2'
+	lineageTag: 7c93e909-3b0f-4889-a369-73b7d933ce16
+
+	column Ordern
+		dataType: int64
+		formatString: 0
+		lineageTag: 5fa1cd38-5d77-4379-b0d1-74e98da44710
+		summarizeBy: sum
+		sourceColumn: Ordern
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Nombre Medida'
+		dataType: string
+		lineageTag: f2832b2e-5756-4cca-a1ac-de5d3ba0fe13
+		summarizeBy: none
+		sourceColumn: Nombre Medida
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Medida 2-f49944a5-aab5-4f01-8fe4-fc8e551f33c9' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUQpKzStJTMrMyUxJTFGK1YlWMgIK+iYWpafmKfgXpBYllmSW5SvFxgIA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Ordern = _t, #"Nombre Medida" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Ordern", Int64.Type}, {"Nombre Medida", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

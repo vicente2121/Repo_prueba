@@ -1,0 +1,9 @@
+{
+  "name": "Custom",
+  "textClasses": {
+    "title": {
+      "fontFace": "Verdana",
+      "fontSize": 16
+    }
+  }
+}

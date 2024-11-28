@@ -1,0 +1,38 @@
+table Dim_MetodoVentas
+	lineageTag: d222a6e1-197e-4d42-8f59-5790d5364cbd
+
+	column 'Sales Method'
+		dataType: string
+		lineageTag: cae0e0b0-c6c8-4859-bdef-b15a535668d4
+		summarizeBy: none
+		sourceColumn: Sales Method
+
+		annotation SummarizationSetBy = Automatic
+
+	column Index
+		dataType: int64
+		formatString: 0
+		lineageTag: d0e18bce-fee4-4fba-838a-699d74455fc5
+		summarizeBy: none
+		sourceColumn: Index
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_MetodoVentas-7f704676-c754-4dbf-9a57-627b7fb128e3 = m
+		mode: import
+		queryGroup: Datos
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("C:\Users\vicen\Downloads\DATOS.xlsx"), null, true),
+				    SportProducts_Table = Source{[Item="SportProducts",Kind="Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(SportProducts_Table,{{"Retailer", type text}, {"Retailer ID", Int64.Type}, {"Invoice Date", type date}, {"Region", type text}, {"State", type text}, {"City", type text}, {"Product", type text}, {"Price per Unit", type number}, {"Units Sold", Int64.Type}, {"Total Sales", type number}, {"Operating Profit", type number}, {"Operating Margin", type number}, {"Sales Method", type text}}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"Sales Method"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type)
+				in
+				    #"Added Index"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

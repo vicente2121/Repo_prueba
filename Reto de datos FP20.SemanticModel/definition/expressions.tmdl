@@ -1,0 +1,28 @@
+expression SportProducts =
+		let
+		    Source = Excel.Workbook(File.Contents("C:\Users\vicen\Downloads\DATOS.xlsx"), null, true),
+		    SportProducts_Table = Source{[Item="SportProducts",Kind="Table"]}[Data],
+		    #"Changed Type" = Table.TransformColumnTypes(SportProducts_Table,{{"Retailer", type text}, {"Retailer ID", Int64.Type}, {"Invoice Date", type date}, {"Region", type text}, {"State", type text}, {"City", type text}, {"Product", type text}, {"Price per Unit", type number}, {"Units Sold", Int64.Type}, {"Total Sales", type number}, {"Operating Profit", type number}, {"Operating Margin", type number}, {"Sales Method", type text}})
+		in
+		    #"Changed Type"
+	lineageTag: e868c97d-fd7b-4df6-878b-db750d29bd6d
+	queryGroup: Stage
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Funcion =
+		(imagen ) =>
+		    let
+		        Base64 = Binary.ToText(imagen, BinaryEncoding.Base64),
+		        ImagenBase64 = "data:image/jpeg;base64, " & Base64
+		    in
+		        ImagenBase64
+	lineageTag: 6703d06e-80a3-4181-b329-cdef0b2e5059
+	queryGroup: Stage
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
